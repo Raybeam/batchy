@@ -32,6 +32,20 @@ module Batchy
       after_transition :running => [:success, :errored], :do => :run_ensure_callbacks
     end
 
+    class << self
+      def run
+        batch = self.new
+        batch.start!
+        begin
+          yield batch
+        rescue Exception => e
+          batch.error = "{#{e.message}\n#{e.backtrace.join('\n')}"
+        ensure
+          batch.finish!
+        end
+      end
+    end
+
     def initialize
       create_callback_queues
       super
