@@ -9,7 +9,16 @@ be caught by batchy and logged.  Callbacks can be defined for success, failure o
 
 == Installation
 
-  gem install batchy
+  $ gem install batchy
+
+Or if you're using bundler add <code>batchy</code> to your Gemfile and
+
+  $ bundle install
+
+If you're using Rails, you can generate a migration with
+
+  $ rails generate batchy:active_record
+  $ rake db:migrate
 
 == Examples
 
