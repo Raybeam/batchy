@@ -1,0 +1,68 @@
+require 'spec_helper'
+
+describe 'Batchy process handling' do
+  before(:each) do
+    @batch = Batchy::Batch.create :name => 'this test batch'
+  end
+
+  it 'should return the correct pid' do
+    ::Process.should_receive(:pid).once.and_return(234)
+    @batch.start!
+
+    @batch.pid.should == 234
+  end
+
+  it 'should be able to kill (SIGTERM) its process' do
+    @batch.start!
+    ::Process.should_receive(:kill).with('TERM', @batch.pid)
+
+    @batch.kill
+  end
+
+  it 'should be able to kill (SIGKILL) its process' do
+    @batch.start!
+    ::Process.should_receive(:kill).with('KILL', @batch.pid)
+
+    @batch.kill!
+  end
+
+  describe 'expiration' do
+    before(:each) do
+      @b_normal = FactoryGirl.create(:batch, :expire_at => (DateTime.now + 1.day))
+      @b_expired = FactoryGirl.create(:batch, :expire_at => (DateTime.now - 1.day))
+      @b_stopped = FactoryGirl.create(:batch, :expire_at => (DateTime.now - 1.day))
+
+      @b_normal.start!
+      @b_expired.start!
+    end
+
+    it 'should return expired batches' do
+      @b_stopped.start!
+
+      expired_batches = Batchy::Batch.expired
+      expired_batches.count.should == 2
+    end
+
+    it 'should only return running batch in expired' do
+      expired_batches = Batchy::Batch.expired
+      expired_batches.count.should == 1
+    end
+
+    it 'should kill expired batches (SIGTERM)' do
+      Batchy::Batch.should_receive(:expired).and_return([@b_normal, @b_expired])
+      @b_normal.should_receive(:kill)
+      @b_expired.should_receive(:kill)
+
+      Batchy.clean_expired
+    end
+
+    it 'should kill expired batches (SIGKILL)' do
+      Batchy::Batch.should_receive(:expired).and_return([@b_normal, @b_expired])
+      @b_normal.should_receive(:kill!)
+      @b_expired.should_receive(:kill!)
+
+      Batchy.clean_expired!
+    end
+  end
+
+end

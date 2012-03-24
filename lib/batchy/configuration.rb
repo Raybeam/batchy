@@ -1,5 +1,11 @@
 module Batchy
   class Configuration
+
+    def initialize
+      @global_success_callbacks = []
+      @global_failure_callbacks = []
+      @global_ensure_callbacks = []
+    end
   
     # Whether the batch can run multiple processes
     # with the same GUID. If set to false,
@@ -22,26 +28,31 @@ module Batchy
       @raise_errors ||= false
     end
 
+    attr_writer :name_process
+    def name_process
+      @name_process ||= true
+    end
+
     # Global callbacks will be called on all batches. They
     # will be added to the batch on initialization and
     # so they will be executed first, before any batch-specific
     # callbacks
 
     # Global callback for failures
-    @global_failure_callbacks = []
+    attr_reader :global_failure_callbacks
     def add_global_failure_callback *args, &block
       @global_failure_callbacks << block
     end
 
     # Global callback for successes
-    @global_success_callbacks = []
+    attr_reader :global_success_callbacks
     def add_global_success_callback *args, &block
       @global_success_callbacks << block
     end
 
     # Global callbacks that execute no matter
     # what the end state
-    @global_ensure_callbacks = []
+    attr_reader :global_ensure_callbacks
     def add_global_ensure_callback *args, &block
       @global_ensure_callbacks << block
     end

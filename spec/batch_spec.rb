@@ -5,6 +5,11 @@ describe Batchy::Batch do
     @batch = FactoryGirl.create(:batch)
   end
 
+  it 'should require a name' do
+    @batch = FactoryGirl.build(:batch, :name => nil)
+    lambda { @batch.save! }.should raise_error(ActiveRecord::RecordInvalid)
+  end
+
   it 'should start in a "new" state' do
     @batch.state.should == 'new'
   end
@@ -143,6 +148,48 @@ describe Batchy::Batch do
       success1.should be_true
       success2.should be_true
     end
+
+    it 'should accept a method for callback' do
+      called = false
+      to_call = lambda { | b |
+        called = true
+      }
+
+      @batch.on_success to_call
+      @batch.start
+      @batch.finish
+
+      called.should be_true
+    end
+
+    it 'should not raise error if no callbacks are given' do
+      @batch.start
+
+      lambda { @batch.finish! }.should_not raise_error
+    end
+
+    it 'should not raise error if no error callbacks are given' do
+      @batch.start!
+
+      @batch.error = 'messed up'
+      lambda { @batch.finish! }.should_not raise_error
+    end
+  end
+
+  it 'should be able to set expiration time' do
+    day_hence = DateTime.now + 1.day
+
+    @batch.expire_at = day_hence
+    @batch.start!
+
+    @batch.expire_at.should == day_hence
+  end
+
+  it 'should know if its expired' do
+    @batch.expire_at = DateTime.now - 1.day
+    @batch.start!
+
+    @batch.expired?.should be_true
   end
 end
 

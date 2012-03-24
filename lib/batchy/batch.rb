@@ -8,6 +8,8 @@ module Batchy
     attr_reader :success_callbacks
     attr_reader :ensure_callbacks
 
+    validates_presence_of :name
+
     state_machine :state, :initial => :new do
       event :start do
         transition :new => :running, :if => :multiples_allowed
@@ -16,7 +18,10 @@ module Batchy
       end
       after_transition :new => :running do | batch, transition |
         batch.started_at = DateTime.now
+        batch.pid = Process.pid
         batch.save!
+
+        $0 = batch.name if Batchy.configure.name_process
       end
 
       event :finish do
@@ -33,20 +38,12 @@ module Batchy
     end
 
     class << self
-      def run
-        batch = self.new
-        batch.start!
-        begin
-          yield batch
-        rescue Exception => e
-          batch.error = "{#{e.message}\n#{e.backtrace.join('\n')}"
-        ensure
-          batch.finish!
-        end
+      def expired
+        where('expire_at < ? and state = ?', DateTime.now, 'running')
       end
     end
 
-    def initialize
+    def initialize *args
       create_callback_queues
       super
     end
@@ -62,8 +59,20 @@ module Batchy
       rel.where("id <> ?", id)
     end
 
+    def expired?
+      expire_at < DateTime.now
+    end
+
     def has_errors
       error?
+    end
+
+    def kill
+      Process.kill('TERM', pid)
+    end
+
+    def kill!
+      Process.kill('KILL', pid)
     end
 
     def multiples_allowed
@@ -71,30 +80,51 @@ module Batchy
     end
 
     def on_ensure *args, &block
-      @ensure_callbacks << block
+      if block_given?
+        @ensure_callbacks << block
+      else
+        @ensure_callbacks << args.shift
+      end
     end
 
     def on_failure *args, &block
-      @failure_callbacks << block
+      if block_given?
+        @failure_callbacks << block
+      else
+        @failure_callbacks << args.shift
+      end
     end
 
     def on_success *args, &block
-      @success_callbacks << block
+      if block_given?
+        @success_callbacks << block
+      else
+        @success_callbacks << args.shift
+      end
     end
 
     def run_ensure_callbacks
+      Batchy.configure.global_ensure_callbacks.each do | ec |
+        ec.call(self)
+      end
       ensure_callbacks.each do | ec |
         ec.call(self)
       end
     end
 
     def run_success_callbacks
+      Batchy.configure.global_success_callbacks.each do | sc |
+        sc.call(self)
+      end
       success_callbacks.each do | sc |
         sc.call(self)
       end
     end
 
     def run_failure_callbacks
+      Batchy.configure.global_failure_callbacks.each do | fc |
+        fc.call(self)
+      end
       failure_callbacks.each do | fc |
         fc.call(self)
       end
