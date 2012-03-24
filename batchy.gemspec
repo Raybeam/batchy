@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   s.add_dependency "activesupport", "~> 3.0"
   s.add_dependency "addressable", "~> 2.2"
   s.add_dependency "andand", "~> 1.3"
+  s.add_dependency "state_machine"
   s.add_dependency "rake"
   s.add_dependency "sys-proctable"
 
