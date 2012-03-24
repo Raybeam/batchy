@@ -5,6 +5,7 @@ module Batchy
       @global_success_callbacks = []
       @global_failure_callbacks = []
       @global_ensure_callbacks = []
+      @global_ignore_callbacks = []
     end
   
     # Whether the batch can run multiple processes
@@ -15,7 +16,7 @@ module Batchy
     # Defaults to true
     attr_writer :allow_duplicates
     def allow_duplicates
-      @allow_duplicates ||= true
+      @allow_duplicates.nil? ? true : @allow_duplicates
     end
 
     # When a batch encounters an error, the error is caught
@@ -25,12 +26,26 @@ module Batchy
     # Defaults to false
     attr_writer :raise_errors
     def raise_errors
-      @raise_errors ||= false
+      @raise_errors.nil? ? false : @raise_errors
     end
 
+    # This sets the name of the process in the proclist to
+    # the name of the current batch.  It defaults to true
     attr_writer :name_process
     def name_process
-      @name_process ||= true
+      @name_process.nil? ? true : @name_process
+    end
+
+    # This library has the ability to issue a SIGKILL
+    # to all expired batch processes.  If batchy is
+    # being used by a server process or the main
+    # application process, this will kill it.  Only
+    # set this to true if you're sure you're only
+    # going to use batches as async processes that
+    # nothing else depends on.  Defaults to false.
+    attr_writer :allow_mass_sigkill
+    def allow_mass_sigkill
+      @allow_mass_sigkill.nil? ? false : @allow_mass_sigkill
     end
 
     # Global callbacks will be called on all batches. They
@@ -42,6 +57,12 @@ module Batchy
     attr_reader :global_failure_callbacks
     def add_global_failure_callback *args, &block
       @global_failure_callbacks << block
+    end
+
+    # Global callback for ignore
+    attr_reader :global_ignore_callbacks
+    def add_global_ignore_callback *args, &block
+      @global_ignore_callbacks << block
     end
 
     # Global callback for successes

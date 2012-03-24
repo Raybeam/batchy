@@ -15,19 +15,33 @@ describe Batchy::Batch do
   end
 
   it 'should start running if nothing else is running' do
-    @batch.should_receive(:multiples_allowed).and_return(false)
-    @batch.should_receive(:already_running).and_return(false)
+    @batch.should_receive(:invalid_duplication).and_return(false)
     @batch.start
 
     @batch.running?.should be_true
   end
 
   it 'should be ignored if another is running' do
-    @batch.should_receive(:multiples_allowed).and_return(false)
-    @batch.should_receive(:already_running).and_return(true)
+    @batch.should_receive(:invalid_duplication).and_return(true)
 
     @batch.start
     @batch.ignored?.should be_true
+  end
+
+  it 'should still set start and end time on ignore' do
+    @batch.should_receive(:invalid_duplication).and_return(true)
+
+    @batch.start
+    @batch.started_at.should_not be_nil
+    @batch.finished_at.should_not be_nil
+  end
+
+  it 'should still set its pid if ignored' do
+    ::Process.should_receive(:pid).and_return(1234)
+    @batch.should_receive(:invalid_duplication).and_return(true)
+
+    @batch.start
+    @batch.pid.should == 1234
   end
 
   it 'should finish in error state if there is an error' do
@@ -83,6 +97,16 @@ describe Batchy::Batch do
       @g_batch.finish!
       new_batch.already_running.should be_false
     end
+
+    it 'should ignore duplicates if configured' do
+      new_batch = FactoryGirl.build(:batch_with_guid)
+
+      Batchy.configure.should_receive(:allow_duplicates).and_return(false)
+      new_batch.should_receive(:already_running).and_return(true)
+
+      new_batch.start!
+      new_batch.ignored?.should be_true
+    end
   end
 
   describe 'callbacks' do
@@ -118,6 +142,28 @@ describe Batchy::Batch do
       @batch.start
       @batch.error = 'This is an error'
       @batch.finish
+      called.should be_true
+    end
+
+    it 'should fire an ignore callback on ignore' do
+      called = false
+      @batch.on_ignore do | bch |
+        called = true
+      end
+      @batch.should_receive(:invalid_duplication).and_return(true)
+
+      @batch.start
+      called.should be_true
+    end
+
+    it 'should still fire the ensure callbacks on ignore' do
+      called = false
+      @batch.on_ensure do | bch |
+        called = true
+      end
+      @batch.should_receive(:invalid_duplication).and_return(true)
+
+      @batch.start
       called.should be_true
     end
 

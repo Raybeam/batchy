@@ -1,0 +1,34 @@
+= Batchy
+
+A wrapper for batch processes.  It was designed to be used with an asynchronous library like delayed_job 
+or resque.  Code wrapped in a batchy block will have it's start and end time logged.  Batchy will keep track of 
+the current state of the batch from new to running to completion.  Errors not handled in the batched code will
+be caught by batchy and logged.  Callbacks can be defined for success, failure or both.
+
+{<img src="https://secure.travis-ci.org/Raybeam/batchy.png?branch=master" />}[http://travis-ci.org/Raybeam/batchy]
+
+== Installation
+
+  gem install batchy
+
+== Examples
+
+=== Configuration
+
+For a full list of configuration options, check the documentation.
+
+  Batchy.configure do | c |
+    c.allow_duplicates = false
+    c.raise_errors = false
+    c.name_process = true
+    c.allow_mass_sigkill = false
+    c.add_global_success_callback do | bch |
+      # do something on success
+    end
+    c.add_global_failure_callback do | bch |
+      # do something on failure
+    end
+    c.add_global_ensure_callback do | bch |
+      # do something regardless of end state
+    end
+  end

@@ -33,6 +33,22 @@ describe 'Batchy run method' do
     bch.error.should =~ /this is an exception/
   end
 
+  it 'should not run the block if ignored' do
+    Batchy.configure do | c | 
+      c.allow_duplicates = false
+    end
+
+    b = FactoryGirl.create(:batch, :guid => 'same')
+    b.start!
+
+    called = false
+    Batchy.run(:name => 'test', :guid => 'same') do | b | 
+      called = true
+    end
+
+    called.should be_false
+  end
+
   it 'should fire success callbacks' do
     called = false
     Batchy.run(:name => 'test') do | b |
@@ -72,6 +88,15 @@ describe 'Batchy run method' do
     end
 
     name.should == "this batch"
+  end
+
+  it 'should be able to set the guid on the batch' do
+    guid = nil
+    Batchy.run(:name => "this batch", :guid => 'this guid') do | b |
+      guid = b.guid
+    end
+
+    guid.should == "this guid"
   end
 
   it 'should not raise an error if not failure callbacks are defined' do

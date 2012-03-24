@@ -56,7 +56,29 @@ describe 'Batchy process handling' do
       Batchy.clean_expired
     end
 
+    it 'should not issue a mass SIGKILL if disallowed' do
+      Batchy.configure do | c |
+        c.allow_mass_sigkill = false
+      end
+
+      Batchy::Batch.should_not_receive(:expired).and_return([@b_normal, @b_expired])
+      Batchy.clean_expired!
+    end
+
+    it 'should warn that mass SIGKILL is not allowed' do
+      Kernel.should_receive(:warn).once
+      Batchy.configure do | c |
+        c.allow_mass_sigkill = false
+      end
+
+      Batchy.clean_expired!
+    end
+
     it 'should kill expired batches (SIGKILL)' do
+      Batchy.configure do | c |
+        c.allow_mass_sigkill = true
+      end
+
       Batchy::Batch.should_receive(:expired).and_return([@b_normal, @b_expired])
       @b_normal.should_receive(:kill!)
       @b_expired.should_receive(:kill!)
