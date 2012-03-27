@@ -78,6 +78,31 @@ describe Batchy::Batch do
     @batch.finished_at.should_not be_nil
   end
 
+  describe 'parents' do
+    it 'should set its parent' do
+      child = FactoryGirl.create(:batch)
+
+      child.parent = @batch
+      child.save!
+
+      child.reload
+      child.parent.should == @batch
+      child.batch_id.should == @batch.id
+    end
+
+    it 'should set its children' do
+      child1 = FactoryGirl.create(:batch)
+      child2 = FactoryGirl.create(:batch)
+
+      @batch.children << child1
+      @batch.children << child2
+      @batch.reload
+
+      @batch.children.should == [child1, child2]
+    end
+
+  end
+
   describe 'guid' do
     before(:each) do
       @g_batch = FactoryGirl.create(:batch_with_guid)
@@ -88,6 +113,22 @@ describe Batchy::Batch do
       new_batch = FactoryGirl.build(:batch_with_guid)
 
       new_batch.duplicate_batches.count.should == 1
+    end
+
+    it 'should raise an error if duplicate_batches is run on a nil guid' do
+      b1 = FactoryGirl.create(:batch, :guid => nil)
+      b2 = FactoryGirl.create(:batch, :guid => nil)
+
+      b1.start!
+      lambda { b2.duplicate_batches.count }.should raise_error(Batchy::Error)
+    end
+
+    it 'should not count a nil guid as a duplicate of another nil guid' do
+      b1 = FactoryGirl.create(:batch, :guid => nil)
+      b2 = FactoryGirl.create(:batch, :guid => nil)
+
+      b1.start!
+      b2.already_running.should be_false
     end
 
     it 'should tell if another batch is already running' do

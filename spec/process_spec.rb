@@ -26,6 +26,29 @@ describe 'Batchy process handling' do
     @batch.kill!
   end
 
+  it 'should name the process after itself' do
+    $0 = 'previous name'
+    Batchy.run(:name => 'this name') do
+      $0.should == 'this name'
+    end
+  end
+
+  it 'should remove its name from the process after completion' do
+    $0 = 'previous name'
+    Batchy.run(:name => 'this name') do
+      # do nothing
+    end
+    $0.should == 'previous name'
+  end
+
+  it 'should return to the previous process name even during failure' do
+    $0 = 'previous name'
+    Batchy.run(:name => 'this name') do
+      raise StandardError, 'oops'
+    end
+    $0.should == 'previous name'
+  end
+
   describe 'expiration' do
     before(:each) do
       @b_normal = FactoryGirl.create(:batch, :expire_at => (DateTime.now + 1.day))

@@ -10,6 +10,8 @@ module Batchy
     attr_reader :ignore_callbacks
 
     validates_presence_of :name
+    belongs_to :parent, :class_name => 'Batchy::Batch', :primary_key => :id, :foreign_key => :batch_id
+    has_many :children, :primary_key => :id, :foreign_key => :batch_id, :class_name => 'Batchy::Batch'
 
     state_machine :state, :initial => :new do
       event :start do
@@ -20,9 +22,6 @@ module Batchy
         batch.started_at = DateTime.now
         batch.pid = Process.pid
         batch.save!
-
-        # Set the proclist process name
-        $0 = batch.name if Batchy.configure.name_process
       end
       
       # Ignored
@@ -63,12 +62,16 @@ module Batchy
 
     # Is there batch with the same guid already running?
     def already_running
+      return false if guid.nil?
+
       duplicate_batches.count > 0
     end
 
     # Find all batches with the same guid that are
     # running.
     def duplicate_batches
+      raise Batchy::Error, "Can not check for duplicate batches on nil guid" if guid.nil?
+
       rel = self.class.where(:guid => guid, :state => "running")
       return rel if new_record?
 

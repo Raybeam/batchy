@@ -54,6 +54,11 @@ module Batchy
     @configuration = nil
   end
 
+  # Get the current batch
+  def current
+    @current ||= nil
+  end
+
   # Sets the logger for batchy
   def logger
     @logger ||= Logger.new(STDOUT)
@@ -74,11 +79,24 @@ module Batchy
     batch.start!
     return false if batch.ignored?
     begin
+      # Set the proclist process name
+      previous_name = $0
+      $0 = batch.name if Batchy.configure.name_process
+
+      # Set current batch
+      @current = batch
+      
       yield batch
     rescue Exception => e
       batch.error = "{#{e.message}\n#{e.backtrace.join('\n')}"
     ensure
       batch.finish!
+
+      # Set proclist process name back
+      $0 = previous_name
     end
   end
+
+  class Error < StandardError
+  end 
 end
