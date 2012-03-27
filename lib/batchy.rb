@@ -83,14 +83,25 @@ module Batchy
       previous_name = $0
       $0 = batch.name if Batchy.configure.name_process
 
+      # Set parent if there is an outer batch
+      if Batchy.current
+        batch.parent = Batchy.current
+      end
+
       # Set current batch
       @current = batch
+
+      # Save everything before yielding
+      batch.save!
       
       yield batch
     rescue Exception => e
       batch.error = "{#{e.message}\n#{e.backtrace.join('\n')}"
     ensure
       batch.finish!
+
+      # Set current batch to parent (or nil if no parent)
+      @current = batch.parent
 
       # Set proclist process name back
       $0 = previous_name

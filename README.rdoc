@@ -20,9 +20,7 @@ If you're using Rails, you can generate a migration with
   $ rails generate batchy:active_record
   $ rake db:migrate
 
-== Examples
-
-=== Configuration
+== Configuration
 
 For a full list of configuration options, check the documentation.
 
