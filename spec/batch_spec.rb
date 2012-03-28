@@ -78,6 +78,15 @@ describe Batchy::Batch do
     @batch.finished_at.should_not be_nil
   end
 
+  it 'should serialize the exception' do
+    @batch.start
+    @batch.error = StandardError.new("this is an error")
+    @batch.finish!
+
+    @batch.reload
+    @batch.error.class.should == StandardError
+  end
+
   describe 'parents' do
     it 'should set its parent' do
       child = FactoryGirl.create(:batch)

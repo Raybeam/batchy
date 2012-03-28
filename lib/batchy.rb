@@ -98,7 +98,7 @@ module Batchy
 
       batch.run_success_callbacks
     rescue Exception => e
-      batch.error = "{#{e.message}\n#{e.backtrace.join('\n')}"
+      batch.error = e
 
       batch.run_failure_callbacks
     ensure

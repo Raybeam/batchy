@@ -30,7 +30,7 @@ describe 'Batchy run method' do
       bch = b
       raise Exception, "this is an exception"
     end
-    bch.error.should =~ /this is an exception/
+    bch.error.message =~ /this is an exception/
   end
 
   it 'should not run the block if ignored' do
@@ -201,7 +201,7 @@ describe 'Batchy run method' do
     lambda { 
       Batchy.run(:name => "error batch") do | b |
         b.on_failure do 
-          raise StandardError, "your f'd"
+          raise StandardError, "you're f'd"
         end
 
         batch = b
@@ -211,5 +211,28 @@ describe 'Batchy run method' do
 
     batch.reload
     batch.state.should == 'errored'
+  end
+
+  it 'should serialize the error on failure' do
+    batch = nil
+    Batchy.run(:name => 'serialize') do | b |
+      batch = b
+      raise StandardError, "this is an error"
+    end
+
+    batch.reload
+    batch.error.class.should == StandardError
+  end
+
+  it 'should be possible to reraise the error on failure' do
+    lambda {
+      Batchy.run(:name => 'reraise error') do | b |
+        b.on_failure do
+          raise b.error
+        end
+
+        raise StandardError, "this is an error"
+      end
+    }.should raise_error(StandardError)
   end
 end
