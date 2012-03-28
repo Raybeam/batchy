@@ -1,4 +1,4 @@
-class CreateBatches < ActiveRecord::Migration
+class CreateBatchyBatches < ActiveRecord::Migration
   def self.up
     create_table :batchy_batches, :force => true do |table|
       table.datetime  :started_at     # When the batch started
