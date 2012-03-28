@@ -106,4 +106,110 @@ describe 'Batchy run method' do
     end
     }.should_not raise_error
   end
+
+  it 'should allow multiple callbacks' do
+    success1 = false
+    success2 = false
+
+    Batchy.run(:name => "this batch") do | b |
+      b.on_success do | bch |
+        success1 = true
+      end
+      b.on_success do | bch |
+        success2 = true
+      end
+    end
+
+    success1.should be_true
+    success2.should be_true
+  end
+
+  it 'should accept a method for callback' do
+    called = false
+    to_call = lambda { | b |
+      called = true
+    }
+
+    Batchy.run(:name => 'this batch') do | b |
+      b.on_success to_call
+    end
+
+    called.should be_true
+  end
+
+  it 'should not raise error if no callbacks are given' do
+    lambda {
+      Batchy.run(:name => 'this batch') do | b |
+        # do something
+      end
+    }.should_not raise_error
+  end
+
+  it 'should fire an ensure callback on success' do
+    called = false
+    Batchy.run(:name => 'this batch') do | b |
+      b.on_ensure do | bch |
+        called = true
+      end
+      # do something
+    end
+
+    called.should be_true
+  end
+
+  it 'should call a success callback on success' do
+    called = false
+    Batchy.run(:name => 'this batch') do | b |
+      b.on_success do | bch |
+        called = true
+      end
+      # do something
+    end
+
+    called.should be_true
+  end
+
+  it 'should call a failure callback on failure' do
+    called = false
+    Batchy.run(:name => 'this batch') do | b |
+      b.on_failure do | bch |
+        called = true
+      end
+
+      raise StandardError, "messed up"
+    end
+
+    called.should be_true
+  end
+
+  it 'should fire an ensure callback on error' do
+    called = false
+    Batchy.run(:name => 'this batch') do | b |
+      b.on_ensure do | bch |
+        called = true
+      end
+
+      raise StandardError, "messed up"
+    end
+
+    called.should be_true
+  end
+
+  it 'should exit with an error even if an error is raised during error handling' do
+    batch = nil
+
+    lambda { 
+      Batchy.run(:name => "error batch") do | b |
+        b.on_failure do 
+          raise StandardError, "your f'd"
+        end
+
+        batch = b
+        raise StandardError, "first blood"
+      end
+    }.should raise_error
+
+    batch.reload
+    batch.state.should == 'errored'
+  end
 end

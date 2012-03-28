@@ -151,41 +151,6 @@ describe Batchy::Batch do
   end
 
   describe 'callbacks' do
-    it 'should call a success callback on success' do
-      success = false
-      @batch.on_success do | bch |
-        success = true
-      end
-
-      @batch.start
-      @batch.finish
-      success.should be_true
-    end
-
-    it 'should call a failure callback on failure' do
-      failed = false
-      @batch.on_failure do | bch |
-        failed = true
-      end
-
-      @batch.start
-      @batch.error = 'This is an error'
-      @batch.finish
-      failed.should be_true
-    end
-
-    it 'should fire an ensure callback on error' do
-      called = false
-      @batch.on_ensure do | bch |
-        called = true
-      end
-
-      @batch.start
-      @batch.error = 'This is an error'
-      @batch.finish
-      called.should be_true
-    end
-
     it 'should fire an ignore callback on ignore' do
       called = false
       @batch.on_ignore do | bch |
@@ -206,60 +171,6 @@ describe Batchy::Batch do
 
       @batch.start
       called.should be_true
-    end
-
-    it 'should fire an ensure callback on success' do
-      called = false
-      @batch.on_ensure do | bch |
-        called = true
-      end
-
-      @batch.start
-      @batch.finish
-      called.should be_true
-    end
-
-    it 'should allow multiple callbacks' do
-      success1 = false
-      success2 = false
-
-      @batch.on_success do | bch |
-        success1 = true
-      end
-      @batch.on_success do | bch |
-        success2 = true
-      end
-
-      @batch.start
-      @batch.finish
-      success1.should be_true
-      success2.should be_true
-    end
-
-    it 'should accept a method for callback' do
-      called = false
-      to_call = lambda { | b |
-        called = true
-      }
-
-      @batch.on_success to_call
-      @batch.start
-      @batch.finish
-
-      called.should be_true
-    end
-
-    it 'should not raise error if no callbacks are given' do
-      @batch.start
-
-      lambda { @batch.finish! }.should_not raise_error
-    end
-
-    it 'should not raise error if no error callbacks are given' do
-      @batch.start!
-
-      @batch.error = 'messed up'
-      lambda { @batch.finish! }.should_not raise_error
     end
   end
 

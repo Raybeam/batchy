@@ -95,10 +95,17 @@ module Batchy
       batch.save!
       
       yield batch
+
+      batch.run_success_callbacks
     rescue Exception => e
       batch.error = "{#{e.message}\n#{e.backtrace.join('\n')}"
+
+      batch.run_failure_callbacks
     ensure
+      batch.finished_at = DateTime.now
       batch.finish!
+
+      batch.run_ensure_callbacks
 
       # Set current batch to parent (or nil if no parent)
       @current = batch.parent

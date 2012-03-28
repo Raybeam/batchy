@@ -42,9 +42,6 @@ module Batchy
         batch.finished_at = DateTime.now
         batch.save!
       end
-      after_transition :running => :success, :do => :run_success_callbacks
-      after_transition :running => :errored, :do => :run_failure_callbacks
-      after_transition :running => [:success, :errored], :do => :run_ensure_callbacks
     end
 
     class << self
