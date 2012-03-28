@@ -36,6 +36,28 @@ describe Batchy::Batch do
     @batch.finished_at.should_not be_nil
   end
 
+  it 'should set pid on start' do
+    ::Process.should_receive(:pid).and_return(1234)
+
+    @batch.start
+    @batch.pid.should == 1234
+  end
+
+  it 'should set hostname on start' do
+    ::Socket.should_receive(:gethostname).and_return('example.com')
+
+    @batch.start
+    @batch.hostname.should == 'example.com'
+  end
+
+  it 'should set hostname if ignored' do
+    ::Socket.should_receive(:gethostname).and_return('example.com')
+    @batch.should_receive(:invalid_duplication).and_return(true)
+
+    @batch.start
+    @batch.hostname.should == 'example.com'
+  end
+
   it 'should still set its pid if ignored' do
     ::Process.should_receive(:pid).and_return(1234)
     @batch.should_receive(:invalid_duplication).and_return(true)

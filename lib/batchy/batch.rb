@@ -23,6 +23,7 @@ module Batchy
       after_transition :new => :running do | batch, transition |
         batch.started_at = DateTime.now
         batch.pid = Process.pid
+        batch.hostname = Socket.gethostname
         batch.save!
       end
       
@@ -30,6 +31,7 @@ module Batchy
       after_transition :new => :ignored do | batch, transition |
         batch.started_at = DateTime.now
         batch.finished_at = DateTime.now
+        batch.hostname = Socket.gethostname
         batch.pid = Process.pid
         batch.save!
       end
