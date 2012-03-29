@@ -49,6 +49,31 @@ describe 'Batchy process handling' do
     $0.should == 'previous name'
   end
 
+  describe 'hostname' do
+    it 'should not kill a batch unless the hostname matches' do
+      ::Socket.should_receive(:gethostname).and_return("example.com")
+
+      @batch.start
+      ::Socket.should_receive(:gethostname).any_number_of_times.and_return('notmatching.com')
+
+      ::Process.should_not_receive(:kill)
+      @batch.kill
+
+      ::Process.should_not_receive(:kill)
+      @batch.kill!
+    end
+
+    it 'should kill a batch if the hostname matches' do
+      @batch.start
+
+      ::Process.should_receive(:kill)
+      @batch.kill
+
+      ::Process.should_receive(:kill)
+      @batch.kill!
+    end
+  end
+
   describe 'expiration' do
     before(:each) do
       @b_normal = FactoryGirl.create(:batch, :expire_at => (DateTime.now + 1.day))

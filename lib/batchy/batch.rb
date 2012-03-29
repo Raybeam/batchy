@@ -96,6 +96,8 @@ module Batchy
 
     # Issues a SIGTERM to the process running this batch
     def kill
+      return false unless hostname == ::Socket.gethostname
+
       Process.kill('TERM', pid)
     end
 
@@ -103,6 +105,8 @@ module Batchy
     # BE CAREFUL! This will kill your application or
     # server if this batch has the same PID.
     def kill!
+      return false unless hostname == ::Socket.gethostname
+      
       Process.kill('KILL', pid)
     end
 
