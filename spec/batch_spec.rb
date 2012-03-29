@@ -118,7 +118,7 @@ describe Batchy::Batch do
 
       child.reload
       child.parent.should == @batch
-      child.batch_id.should == @batch.id
+      child.parent_id.should == @batch.id
     end
 
     it 'should set its children' do

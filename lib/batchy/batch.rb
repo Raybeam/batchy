@@ -10,8 +10,8 @@ module Batchy
     attr_reader :ignore_callbacks
 
     validates_presence_of :name
-    belongs_to :parent, :class_name => 'Batchy::Batch', :primary_key => :id, :foreign_key => :batch_id
-    has_many :children, :primary_key => :id, :foreign_key => :batch_id, :class_name => 'Batchy::Batch'
+    belongs_to :parent, :class_name => 'Batchy::Batch', :primary_key => :id, :foreign_key => :parent_id
+    has_many :children, :primary_key => :id, :foreign_key => :parent_id, :class_name => 'Batchy::Batch'
 
     serialize :error
 
