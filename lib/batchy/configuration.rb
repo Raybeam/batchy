@@ -77,5 +77,12 @@ module Batchy
     def add_global_ensure_callback *args, &block
       @global_ensure_callbacks << block
     end
+
+    # Sets the prefix of all batchy processes
+    # Defaults to [BATCHY]
+    attr_writer :process_name_prefix
+    def process_name_prefix
+      @process_name_prefix.nil? ? "[BATCHY]" : @process_name_prefix
+    end
   end
 end

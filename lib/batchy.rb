@@ -81,7 +81,8 @@ module Batchy
     begin
       # Set the proclist process name
       previous_name = $0
-      $0 = batch.name if Batchy.configure.name_process
+      process_name = [Batchy.configure.process_name_prefix, batch.name].join(" ")
+      $0 = process_name if Batchy.configure.name_process
 
       # Set parent if there is an outer batch
       if Batchy.current

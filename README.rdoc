@@ -28,6 +28,7 @@ For a full list of configuration options, check the documentation.
     c.allow_duplicates = false
     c.raise_errors = false
     c.name_process = true
+    c.process_name_prefix = "[BATCHY]"
     c.allow_mass_sigkill = false
     c.add_global_success_callback do | bch |
       # do something on success

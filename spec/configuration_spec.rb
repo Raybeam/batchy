@@ -19,6 +19,30 @@ describe Batchy::Configuration do
     called.should be_true
   end
 
+  it 'should be able to set a prefix for process names' do
+    process_name = 'el processo'
+
+    Batchy.configure do | c |
+      c.process_name_prefix = '[BOB]'
+    end
+
+    Batchy.run(:name => 'test') do | b |
+      process_name = $0
+    end
+
+    process_name.should == '[BOB] test'
+  end
+
+  it 'should default to [Batchy] as a prefix for process names' do
+    process_name = 'el processo'
+
+    Batchy.run(:name => 'test') do | b |
+      process_name = $0
+    end
+
+    process_name.should == '[BATCHY] test'
+  end
+
   it 'should be able to set allow_duplicates to false' do
     Batchy.configure do | c |
       c.allow_duplicates = false
