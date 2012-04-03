@@ -14,6 +14,7 @@ module Batchy
     has_many :children, :primary_key => :id, :foreign_key => :parent_id, :class_name => 'Batchy::Batch'
 
     serialize :error
+    serialize :backtrace
 
     state_machine :state, :initial => :new do
       event :start do
@@ -77,6 +78,25 @@ module Batchy
       return rel if new_record?
 
       rel.where("id <> ?", id)
+    end
+
+    # When serializing an exception, the YAML library does not save the
+    # backtrace.  To fix this, we're saving both the error and backtrace
+    # when the error is saved
+    def error=(err)
+      write_attribute(:error, err)
+      write_attribute(:backtrace, err.backtrace)
+    end
+
+    # Conversely, the backtrace is added to the error after a read
+    def error
+      err = read_attribute(:error)
+      return err if err.blank?
+
+      backtrace = read_attribute(:backtrace)
+      err.set_backtrace(backtrace)
+
+      err
     end
 
     # Is this batch expired

@@ -10,7 +10,8 @@ class CreateBatchyBatches < ActiveRecord::Migration
       table.integer   :pid            # Process ID of the current batch
       table.string    :name           # Name of the batch job
       table.string    :guid           # Field to be used for unique identification of the calling job
-      table.integer   :parent_id       # Self-referential ID for identifying parent batches
+      table.integer   :parent_id      # Self-referential ID for identifying parent batches
+      table.text      :backtrace      # Backtrace for an error, if there is one
       table.timestamps
     end
 

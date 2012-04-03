@@ -69,7 +69,7 @@ describe Batchy::Batch do
   it 'should finish in error state if there is an error' do
     @batch.start
 
-    @batch.error = "This is an error"
+    @batch.error = StandardError.new("This is an error")
     @batch.finish
     @batch.errored?.should be_true
   end
@@ -77,7 +77,7 @@ describe Batchy::Batch do
   it 'should know if it has errors' do
     @batch.has_errors.should be_false
 
-    @batch.error = 'here is an error'
+    @batch.error = StandardError.new("This is an error")
     @batch.has_errors.should be_true
   end
 
@@ -107,6 +107,34 @@ describe Batchy::Batch do
 
     @batch.reload
     @batch.error.class.should == StandardError
+  end
+
+  it 'should only be able to set the backtrace through the error' do
+    backtrace = ["/Users/rbriski/dev/batchy/spec/batchy_run_spec.rb:205:in `block (3 levels) in <top (required)>'", "/Users/rbriski/dev/batchy/lib/batchy.rb:98:in `run'"]
+
+    ex = StandardError.new("this is an error")
+    ex.set_backtrace backtrace
+
+    @batch.start
+    @batch.error = ex
+    @batch.finish!
+
+    @batch.reload
+    @batch.backtrace.should == backtrace
+  end
+
+  it 'should only be able to access the backtrace through the error' do
+    backtrace = ["/Users/rbriski/dev/batchy/spec/batchy_run_spec.rb:205:in `block (3 levels) in <top (required)>'", "/Users/rbriski/dev/batchy/lib/batchy.rb:98:in `run'"]
+
+    ex = StandardError.new("this is an error")
+    ex.set_backtrace backtrace
+
+    @batch.start
+    @batch.error = ex
+    @batch.finish!
+
+    @batch.reload
+    @batch.error.backtrace.should == backtrace
   end
 
   describe 'parents' do

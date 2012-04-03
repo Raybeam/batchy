@@ -195,6 +195,19 @@ describe 'Batchy run method' do
     called.should be_true
   end
 
+  it 'should serialize the backtrace' do 
+    batch_id = nil
+    Batchy.run(:name => 'serialize') do | b |
+      batch_id = b.id
+      raise StandardError, "this is a stick up"
+    end
+
+    batch = Batchy::Batch.find(batch_id)
+    batch.error.message.should_not be_nil
+    batch.error.backtrace.should_not be_nil
+    batch.backtrace.should_not be_nil
+  end
+
   it 'should exit with an error even if an error is raised during error handling' do
     batch = nil
 
