@@ -69,6 +69,18 @@ module Batchy
       duplicate_batches.count > 0
     end
 
+    # Removes duplicate batches that are stuck in
+    # a running state
+    def clear_zombies
+      duplicate_batches.each do | dup |
+        # next if ::Socket.gethostname
+        if not dup.process_running?
+          dup.error = Batchy::Error.new("Process has died, moving to a finished state")
+          dup.finish!
+        end
+      end
+    end
+
     # Find all batches with the same guid that are
     # running.
     def duplicate_batches
@@ -85,7 +97,7 @@ module Batchy
     # when the error is saved
     def error=(err)
       write_attribute(:error, err)
-      write_attribute(:backtrace, err.backtrace)
+      write_attribute(:backtrace, err.backtrace) if err.respond_to?(:backtrace)
     end
 
     # Conversely, the backtrace is added to the error after a read
@@ -168,6 +180,14 @@ module Batchy
       else
         @success_callbacks << args.shift
       end
+    end
+
+    # Checks to see if the process attached to this
+    # batch is active
+    def process_running?
+      raise Batchy::Error, 'Current host does not match the host running the batch' unless Socket.gethostname == hostname
+
+      not Sys::ProcTable.ps(pid).blank?
     end
 
     # :nodoc:

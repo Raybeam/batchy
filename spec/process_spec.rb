@@ -49,6 +49,43 @@ describe 'Batchy process handling' do
     $0.should == 'previous name'
   end
 
+  it 'should be able to check if its process is running' do
+    @batch.start!
+
+    @batch.process_running?.should be_true
+
+    Sys::ProcTable.should_receive(:ps).with(@batch.pid).and_return(nil)
+    @batch.process_running?.should be_false
+  end
+
+  it 'should raise error if the hostname doesnt match when checking' do
+    @batch.start!
+
+    ::Socket.should_receive(:gethostname).and_return("example.com")
+
+    lambda { @batch.process_running?.should be_false }.should raise_error(Batchy::Error)
+  end
+
+  it 'should finish with errors if the batch in a running state but the process is not available' do
+    b1 = Batchy::Batch.create :name => 'this test batch', :guid => 'same'
+    b2 = Batchy::Batch.create :name => 'this test batch 2', :guid => 'same'
+
+#    Sys::ProcTable.should_receive(:ps).with(Process.pid).and_return(nil)
+
+    b1.start!
+    b1.should_receive(:process_running?).and_return(false)
+    puts " * * * *#{b1.id}"
+
+    b2.clear_zombies
+    
+    b1.reload
+    b1.state.should == 'errored'
+  end
+
+  it 'should finish with errors if the batch in a new state but the process is not available' do
+
+  end
+
   describe 'hostname' do
     it 'should not kill a batch unless the hostname matches' do
       ::Socket.should_receive(:gethostname).and_return("example.com")

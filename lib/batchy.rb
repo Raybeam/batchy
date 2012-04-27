@@ -76,6 +76,8 @@ module Batchy
     options = args.extract_options!
 
     batch = Batch.create options
+    # batch.clear_zombies
+
     batch.start!
     return false if batch.ignored?
     begin
