@@ -105,6 +105,16 @@ describe 'Batchy process handling' do
       ::Process.should_receive(:kill)
       @batch.kill!
     end
+
+    it 'should limit duplicate checking to the current hostname if asked' do
+      b1 = Batchy::Batch.create :name => 'this test batch', :guid => 'same'
+      b1.start!
+      b1.hostname = 'example.com'
+      b1.save
+
+      b2 = Batchy::Batch.create :name => 'this test batch 2', :guid => 'same'
+      b2.duplicate_batches(:limit_to_current_host => true).should be_blank
+    end
   end
 
   describe 'expiration' do

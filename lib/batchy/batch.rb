@@ -72,7 +72,7 @@ module Batchy
     # Removes duplicate batches that are stuck in
     # a running state
     def clear_zombies
-      duplicate_batches.each do | dup |
+      duplicate_batches(:limit_to_current_host => true).each do | dup |
         if not dup.process_running?
           dup.error = Batchy::Error.new("Process has died, moving to a finished state")
           dup.finish!
@@ -82,10 +82,23 @@ module Batchy
 
     # Find all batches with the same guid that are
     # running.
-    def duplicate_batches
+    #
+    # limit_to_current_host
+    #   This option limit duplicate batches to the
+    #   current host.
+    #   Default: false
+    #
+    def duplicate_batches *args
+      options = args.extract_options!
+      options.reverse_merge! :limit_to_current_host => false
+
       raise Batchy::Error, "Can not check for duplicate batches on nil guid" if guid.nil?
 
       rel = self.class.where(:guid => guid, :state => "running")
+
+      if options[:limit_to_current_host]
+        rel = rel.where(:hostname => Socket.gethostname)
+      end
       return rel if new_record?
 
       rel.where("id <> ?", id)
