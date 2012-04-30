@@ -70,11 +70,9 @@ describe 'Batchy process handling' do
     b1 = Batchy::Batch.create :name => 'this test batch', :guid => 'same'
     b2 = Batchy::Batch.create :name => 'this test batch 2', :guid => 'same'
 
-#    Sys::ProcTable.should_receive(:ps).with(Process.pid).and_return(nil)
 
     b1.start!
-    b1.should_receive(:process_running?).and_return(false)
-    puts " * * * *#{b1.id}"
+    Sys::ProcTable.should_receive(:ps).with(b1.pid).and_return(nil)
 
     b2.clear_zombies
     
@@ -82,9 +80,7 @@ describe 'Batchy process handling' do
     b1.state.should == 'errored'
   end
 
-  it 'should finish with errors if the batch in a new state but the process is not available' do
-
-  end
+  # pending 'should finish with errors if the batch in a new state but the process is not available [NOT SURE IF WE NEED THIS]'
 
   describe 'hostname' do
     it 'should not kill a batch unless the hostname matches' do

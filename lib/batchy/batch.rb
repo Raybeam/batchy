@@ -73,7 +73,6 @@ module Batchy
     # a running state
     def clear_zombies
       duplicate_batches.each do | dup |
-        # next if ::Socket.gethostname
         if not dup.process_running?
           dup.error = Batchy::Error.new("Process has died, moving to a finished state")
           dup.finish!
