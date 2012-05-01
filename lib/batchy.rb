@@ -71,9 +71,13 @@ module Batchy
 
   def create_batch options
     ignore_block = options[:on_ignore] ? options[:on_ignore] : nil
+    ensure_block = options[:on_ensure] ? options[:on_ensure] : nil
     options.delete(:on_ignore) if options[:on_ignore]
+    options.delete(:on_ensure) if options[:on_ensure]
+
     batch = Batch.create options
     batch.on_ignore ignore_block unless ignore_block.nil?    
+    batch.on_ensure ensure_block unless ensure_block.nil?    
     return batch
   end
 

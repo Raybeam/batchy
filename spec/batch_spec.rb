@@ -210,30 +210,33 @@ describe Batchy::Batch do
   end
   
   describe 'blackbox ignore test' do
-    it 'should fire an ignore callback on ignore' do
+    it 'should fire ignore and ensure callbacks on ignore' do
       ignored = false
+      ensured = false
       Batchy.configure.allow_duplicates = false
       b1 = Batchy::Batch.create :name => 'this test batch', :guid => 'same'
       b1.start!
       b1.stub!(:already_running).and_return(true)
 
-      block = Proc.new{ignored = true}
-      Batchy.run :name => 'this test batch 2', :guid => 'same', :on_ignore => block do |b2| 
+      ignore_block = Proc.new{ignored = true}
+      ensure_block = Proc.new{ensured = true}
+      Batchy.run :name => 'this test batch 2', :guid => 'same', 
+      :on_ignore => ignore_block, :on_ensure => ensure_block do |b2| 
         puts "IGNORED" # this line will not be executed
       end
       ignored.should be_true
       Batchy.configure.allow_duplicates = true
     end
 
-    it 'on ignore callback inside the block should not run' do
+    it 'should not execute code inside an ignored batch block' do
       ignored = false
+
       Batchy.configure.allow_duplicates = false
       b1 = Batchy::Batch.create :name => 'this test batch', :guid => 'same'
       b1.start!
 
       Batchy.run :name => 'this test batch 2', :guid => 'same' do |b2| 
-        b2.on_ignore{ignored = true}
-        puts "IGNORED" # this line will not be executed
+        ignored = true
       end
       ignored.should be_false
       Batchy.configure.allow_duplicates = true
