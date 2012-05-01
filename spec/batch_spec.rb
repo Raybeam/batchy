@@ -208,6 +208,24 @@ describe Batchy::Batch do
       new_batch.ignored?.should be_true
     end
   end
+  
+  describe 'blackbox ignore test' do
+    it 'should fire an ignore callback on ignore' do
+      ignored = false
+
+      b1 = Batchy::Batch.create :name => 'this test batch', :guid => 'same'
+      b2 = Batchy::Batch.create :name => 'this test batch 2', :guid => 'same'
+      b1.start!
+      b1.should_receive(:already_running).and_return(true)
+      Sys::ProcTable.should_receive(:ps).with(b1.pid).and_return("running")
+
+      Batchy.run :name => 'this test batch 2', :guid => 'same' do |b2| 
+        b2.on_ignore{ignored = true} 
+      end
+
+      ignored.should be_true
+    end
+  end
 
   describe 'callbacks' do
     it 'should fire an ignore callback on ignore' do
