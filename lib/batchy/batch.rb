@@ -93,7 +93,6 @@ module Batchy
       options.reverse_merge! :limit_to_current_host => false
 
       raise Batchy::Error, "Can not check for duplicate batches on nil guid" if guid.nil?
-
       rel = self.class.where(:guid => guid, :state => "running")
 
       if options[:limit_to_current_host]
