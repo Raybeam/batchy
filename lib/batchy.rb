@@ -69,52 +69,65 @@ module Batchy
     @logger = logger
   end
 
+  def create_batch options
+    ignore_block = options[:on_ignore] ? options[:on_ignore] : nil
+    ensure_block = options[:on_ensure] ? options[:on_ensure] : nil
+    options.delete(:on_ignore) if options[:on_ignore]
+    options.delete(:on_ensure) if options[:on_ensure]
+
+    batch = Batch.create options
+    batch.on_ignore ignore_block unless ignore_block.nil?    
+    batch.on_ensure ensure_block unless ensure_block.nil?    
+    return batch
+  end
+
   # The main entry point for batchy.  It wraps code in a batchy
   # block.  Batchy handles errors, logging and allows for
   # callbacks.
   def run *args
     options = args.extract_options!
+    batch = create_batch options
 
-    batch = Batch.create options
     batch.clear_zombies unless batch.guid.nil?
-
     batch.start!
-    return false if batch.ignored?
-    begin
-      # Set the proclist process name
-      previous_name = $0
-      process_name = [Batchy.configure.process_name_prefix, batch.name].join(" ")
-      $0 = process_name if Batchy.configure.name_process
 
-      # Set parent if there is an outer batch
-      if Batchy.current
-        batch.parent = Batchy.current
+    unless batch.ignored?
+      begin
+        # Set the proclist process name
+        previous_name = $0
+        process_name = [Batchy.configure.process_name_prefix, batch.name].join(" ")
+        $0 = process_name if Batchy.configure.name_process
+        
+        # Set parent if there is an outer batch
+        if Batchy.current
+          batch.parent = Batchy.current
+        end
+        
+        # Set current batch
+        @current = batch
+        
+        # Save everything before yielding
+        batch.save!
+        
+        yield batch
+        
+        batch.run_success_callbacks
+      rescue Exception => e
+        batch.error = e
+        
+        batch.run_failure_callbacks
+      ensure
+        batch.finished_at = DateTime.now
+        batch.finish!
+        
+        batch.run_ensure_callbacks
+        
+        # Set current batch to parent (or nil if no parent)
+        @current = batch.parent
+        
+        # Set proclist process name back
+        $0 = previous_name
       end
-
-      # Set current batch
-      @current = batch
-
-      # Save everything before yielding
-      batch.save!
-      
-      yield batch
-
-      batch.run_success_callbacks
-    rescue Exception => e
-      batch.error = e
-
-      batch.run_failure_callbacks
-    ensure
-      batch.finished_at = DateTime.now
-      batch.finish!
-
-      batch.run_ensure_callbacks
-
-      # Set current batch to parent (or nil if no parent)
-      @current = batch.parent
-
-      # Set proclist process name back
-      $0 = previous_name
     end
   end
 
