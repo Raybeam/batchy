@@ -4,6 +4,7 @@ require 'addressable/uri'
 require 'andand'
 require 'state_machine/core'
 require 'sys/proctable'
+require 'socket'
 
 require 'batchy/batch'
 require 'batchy/configuration'
