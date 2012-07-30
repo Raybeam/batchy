@@ -137,6 +137,15 @@ describe Batchy::Batch do
     @batch.error.backtrace.should == backtrace
   end
 
+  it 'should be able to handle a string in the error field' do
+    @batch.start
+    @batch.error = "This is an error"
+    @batch.finish!
+
+    @batch.error.should == "This is an error"
+    @batch.error.backtrace.should be_nil
+  end
+
   describe 'parents' do
     it 'should set its parent' do
       child = FactoryGirl.create(:batch)

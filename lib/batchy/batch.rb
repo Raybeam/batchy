@@ -117,7 +117,13 @@ module Batchy
       return err if err.blank?
 
       backtrace = read_attribute(:backtrace)
-      err.set_backtrace(backtrace)
+      if err.respond_to?(:set_backtrace)
+        err.set_backtrace(backtrace) 
+      else
+        def err.backtrace
+          nil
+        end
+      end
 
       err
     end
