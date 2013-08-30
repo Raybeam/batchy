@@ -24,6 +24,16 @@ describe 'Batchy run method' do
     bch.state.should == 'errored'
   end
 
+  it 'should finish with as stopped if there was a stoppped error' do
+    bch = nil
+    Batchy.run(:name => 'test') do | b | 
+      bch = b
+      raise Batchy::StoppedError, "We need to stop"
+    end
+    bch.state.should == 'stopped'
+  end
+
+
   it 'should save the error message in the batch' do
     bch = nil
     Batchy.run(:name => 'test') do | b | 
