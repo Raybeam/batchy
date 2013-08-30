@@ -43,9 +43,10 @@ module Batchy
 
       event :finish do
         transition :running => :success, :unless => :has_errors
+        transition :running => :guarded, :if => :guarded
         transition :running => :errored
       end
-      after_transition :running => [:success, :errored] do | batch, transition |
+      after_transition :running => [:success, :errored, :guarded] do | batch, transition |
         batch.finished_at = DateTime.now
         batch.save!
       end
@@ -139,6 +140,12 @@ module Batchy
     def has_errors
       error?
     end
+    
+    # Was this errored through a GuardedError?
+    def guarded
+      has_errors and error.class == GuardedError
+    end
+
 
     # Is this an unwanted duplicate process?
     def invalid_duplication

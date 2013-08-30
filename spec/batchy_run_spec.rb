@@ -24,6 +24,16 @@ describe 'Batchy run method' do
     bch.state.should == 'errored'
   end
 
+  it 'should finish with as guarded if there was a guard error' do
+    bch = nil
+    Batchy.run(:name => 'test') do | b | 
+      bch = b
+      raise Batchy::GuardedError, "this is an exception"
+    end
+    bch.state.should == 'guarded'
+  end
+
+
   it 'should save the error message in the batch' do
     bch = nil
     Batchy.run(:name => 'test') do | b | 
