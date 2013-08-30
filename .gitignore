@@ -1,3 +1,5 @@
 Gemfile.lock
 pkg
 *swp
+.bundle
+bin/*
