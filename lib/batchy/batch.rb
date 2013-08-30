@@ -142,6 +142,7 @@ module Batchy
     end
     
     # Was this errored through a StoppedError?
+    # See StoppedError for example uses
     def was_stopped
       has_errors and error.class == StoppedError
     end
