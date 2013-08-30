@@ -43,10 +43,10 @@ module Batchy
 
       event :finish do
         transition :running => :success, :unless => :has_errors
-        transition :running => :guarded, :if => :guarded
+        transition :running => :stopped, :if => :was_stopped
         transition :running => :errored
       end
-      after_transition :running => [:success, :errored, :guarded] do | batch, transition |
+      after_transition :running => [:success, :errored, :stopped] do | batch, transition |
         batch.finished_at = DateTime.now
         batch.save!
       end
@@ -141,9 +141,9 @@ module Batchy
       error?
     end
     
-    # Was this errored through a GuardedError?
-    def guarded
-      has_errors and error.class == GuardedError
+    # Was this errored through a StoppedError?
+    def was_stopped
+      has_errors and error.class == StoppedError
     end
 
 

@@ -24,13 +24,13 @@ describe 'Batchy run method' do
     bch.state.should == 'errored'
   end
 
-  it 'should finish with as guarded if there was a guard error' do
+  it 'should finish with as stopped if there was a stoppped error' do
     bch = nil
     Batchy.run(:name => 'test') do | b | 
       bch = b
-      raise Batchy::GuardedError, "this is an exception"
+      raise Batchy::StoppedError, "We need to stop"
     end
-    bch.state.should == 'guarded'
+    bch.state.should == 'stopped'
   end
 
 
