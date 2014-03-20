@@ -225,7 +225,7 @@ describe Batchy::Batch do
       Batchy.configure.allow_duplicates = false
       b1 = Batchy::Batch.create :name => 'this test batch', :guid => 'same'
       b1.start!
-      b1.stub!(:already_running).and_return(true)
+      b1.stub(:already_running).and_return(true)
 
       ignore_block = Proc.new{ignored = true}
       ensure_block = Proc.new{ensured = true}

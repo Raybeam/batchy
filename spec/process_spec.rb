@@ -87,7 +87,7 @@ describe 'Batchy process handling' do
       ::Socket.should_receive(:gethostname).and_return("example.com")
 
       @batch.start
-      ::Socket.should_receive(:gethostname).any_number_of_times.and_return('notmatching.com')
+      ::Socket.should_receive(:gethostname).twice.and_return('notmatching.com')
 
       ::Process.should_not_receive(:kill)
       @batch.kill
@@ -152,7 +152,7 @@ describe 'Batchy process handling' do
         c.allow_mass_sigkill = false
       end
 
-      Batchy::Batch.should_not_receive(:expired).and_return([@b_normal, @b_expired])
+      Batchy::Batch.should_not_receive(:expired)
       Batchy.clean_expired!
     end
 
