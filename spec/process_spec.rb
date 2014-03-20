@@ -6,7 +6,7 @@ describe 'Batchy process handling' do
   end
 
   it 'should return the correct pid' do
-    ::Process.should_receive(:pid).once.and_return(234)
+    ::Process.should_receive(:pid).at_least(1).times.and_return(234)
     @batch.start!
 
     @batch.pid.should == 234
