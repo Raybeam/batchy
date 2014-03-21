@@ -37,10 +37,7 @@ describe Batchy::Batch do
   end
 
   it 'should set pid on start' do
-    ::Process.should_receive(:pid).and_return(1234)
-
-    @batch.start
-    @batch.pid.should == 1234
+    expect { @batch.start }.to change {@batch.pid }.to Process.pid
   end
 
   it 'should set hostname on start' do
@@ -59,11 +56,9 @@ describe Batchy::Batch do
   end
 
   it 'should still set its pid if ignored' do
-    ::Process.should_receive(:pid).and_return(1234)
     @batch.should_receive(:invalid_duplication).and_return(true)
 
-    @batch.start
-    @batch.pid.should == 1234
+    expect { @batch.start }.to change {@batch.pid }.to Process.pid
   end
 
   it 'should finish in error state if there is an error' do

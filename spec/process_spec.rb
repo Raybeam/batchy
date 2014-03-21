@@ -6,10 +6,7 @@ describe 'Batchy process handling' do
   end
 
   it 'should return the correct pid' do
-    ::Process.should_receive(:pid).at_least(1).times.and_return(234)
-    @batch.start!
-
-    @batch.pid.should == 234
+    expect { @batch.start! }.to change {@batch.pid}.to Process.pid
   end
 
   it 'should be able to kill (SIGTERM) its process' do
