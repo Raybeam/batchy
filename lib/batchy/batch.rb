@@ -116,8 +116,17 @@ module Batchy
 
     # Conversely, the backtrace is added to the error after a read
     def error
-      err = read_attribute(:error)
-      return err if err.blank?
+      err = nil
+      # YAML parsers packaged with some versions of ruby have trouble
+      # deserializing exception objects, so if we fail, just wrap the raw YAML
+      # in a wrapper object that looks and quacks mostly like an exception
+      # object.
+      begin
+        err = read_attribute(:error)
+        return err if err.blank?
+      rescue
+        err = ErrWrapper.new(read_attribute_before_type_cast(:error),[])
+      end
 
       backtrace = read_attribute(:backtrace)
       if err.respond_to?(:set_backtrace)
@@ -266,5 +275,10 @@ module Batchy
       @ensure_callbacks = []
       @ignore_callbacks = []
     end
+  end
+  
+  class ErrWrapper < Struct.new(:message, :backtrace)
+    alias_method :to_s, :message
+    alias_method :set_backtrace, :"backtrace="
   end
 end
